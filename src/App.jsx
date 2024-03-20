@@ -3,7 +3,7 @@ import "./App.css";
 import { SelectColor } from "./components/SelectColor";
 import { useEffect, useState } from "react";
 import { Card } from "./components/Card";
-import { crearColor, leerColores } from "./helpers/queries";
+import { borrarColor, crearColor, leerColores } from "./helpers/queries";
 
 function App() {
   const [nombreColorIngresado, setNombreColorIngresado] = useState("");
@@ -32,11 +32,16 @@ function App() {
     }
   };
 
-  const handleErase = (objetoColor) => {
-    const coloresFiltrados = colores.filter(
-      (color) => color.nombre !== objetoColor.nombre
-    );
-    setColores(coloresFiltrados);
+  const handleErase = async (objetoColor) => {
+    try {
+      const respuesta = await borrarColor(objetoColor._id)
+      if (respuesta.status === 200){
+        alert("Color borrado correctamente")
+        traerColores()
+      }
+    } catch (error) {
+      console.log(error)
+    }
   };
 
   const guardarColor = async () => {
