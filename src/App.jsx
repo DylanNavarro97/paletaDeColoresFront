@@ -1,8 +1,9 @@
 import { Container } from "react-bootstrap";
 import "./App.css";
 import { SelectColor } from "./components/SelectColor";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "./components/Card";
+import { crearColor, leerColores } from "./helpers/queries";
 
 function App() {
   const [nombreColorIngresado, setNombreColorIngresado] = useState("");
@@ -22,47 +23,49 @@ function App() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    
-
-    if (nombreColorIngresado.length >= 3) {
-      if (!verificarNombre()){
-        alert("Color agregado correctamente");
-        guardarColor();
-        setNombreColorIngresado("");
-  
-        setColorSeleccionado("#0000ff");
-      } else {
-        alert("Ese color ya fue ingresado")
-      }
-      
+    if (nombreColorIngresado.trim().length >= 3) {
+      guardarColor();
+      setNombreColorIngresado("");
+      setColorSeleccionado("#0000ff");
     } else {
       alert("Ingresa un nombre de color válido");
     }
   };
 
   const handleErase = (objetoColor) => {
-    const coloresFiltrados = colores.filter((color) => color.nombre !== objetoColor.nombre)
-    setColores(coloresFiltrados)
-  }
+    const coloresFiltrados = colores.filter(
+      (color) => color.nombre !== objetoColor.nombre
+    );
+    setColores(coloresFiltrados);
+  };
 
-  const guardarColor = () => {
+  const guardarColor = async () => {
     const color = {
       nombre: nombreColorIngresado,
       color: colorSeleccionado,
     };
 
-    setColores([...colores, color]);
+    const respuesta = await crearColor(color);
+    if (respuesta.status === 201) {
+      setColores([...colores, color]);
+      alert("Color agregado correctamente");
+    } else {
+      alert(respuesta?.mensaje);
+    }
   };
 
-  const verificarNombre = () => {
-    const nombreFiltrado = colores.filter((color) => color.nombre === nombreColorIngresado)
-
-    if (nombreFiltrado.length > 0){
-      return true
-    } else {
-      return false
+  const traerColores = async () => {
+    try {
+      const respuesta = await leerColores();
+      setColores(respuesta);
+    } catch (error) {
+      console.log(error);
     }
-  }
+  };
+
+  useEffect(() => {
+    traerColores();
+  }, []);
 
   return (
     <>
@@ -85,7 +88,11 @@ function App() {
               <div className="d-flex flex-wrap">
                 {colores.map((color, i) => (
                   <div className="my-4 me-3 d-flex" key={i}>
-                    <Card className="mt-3" color={color} handleErase={handleErase} />
+                    <Card
+                      className="mt-3"
+                      color={color}
+                      handleErase={handleErase}
+                    />
                   </div>
                 ))}
               </div>
